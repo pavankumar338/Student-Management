@@ -1,5 +1,6 @@
-import { supabase } from "@/lib/supabase";
-import { Student } from "@/types/student";
+import { getStudents } from "@/app/actions/students";
+import { getExamResults } from "@/app/actions/performance";
+import { getAllAttendance } from "@/app/actions/attendance";
 import PerformanceAnalytics from "@/components/dashboard/PerformanceAnalytics";
 import AttendanceAnalytics from "@/components/analytics/AttendanceAnalytics";
 import ClientAnalyticsTabs from "./ClientAnalyticsTabs";
@@ -8,27 +9,11 @@ import { BarChart3 } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsDashboardPage() {
-  // 1. Fetch Students
-  const { data: studentsData } = await supabase
-    .from("students")
-    .select("*")
-    .order("first_name");
-
-  // 2. Fetch Exams for Performance Charts
-  const { data: examResults } = await supabase
-    .from("exam_results")
-    .select("*, students(first_name, last_name, grade)")
-    .order("exam_date", { ascending: false });
-
-  // 3. Fetch Attendance records
-  const { data: attendanceData } = await supabase
-    .from("attendance")
-    .select("*")
-    .order("date", { ascending: false });
-
-  const students = (studentsData as Student[]) || [];
-  const exams = (examResults as any[]) || [];
-  const attendance = (attendanceData as any[]) || [];
+  const [students, exams, attendance] = await Promise.all([
+    getStudents(),
+    getExamResults(),
+    getAllAttendance(),
+  ]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

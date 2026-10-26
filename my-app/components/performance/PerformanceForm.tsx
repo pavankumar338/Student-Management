@@ -5,7 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CreateExamResultInput, ExamResult } from "@/types/performance";
 import { Student } from "@/types/student";
-import { supabase } from "@/lib/supabase";
+import { getStudentsDropdown } from "@/app/actions/students";
+import { createExamResult, updateExamResult } from "@/app/actions/performance";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -33,14 +34,14 @@ interface PerformanceFormProps {
 export default function PerformanceForm({ initialData, preselectedStudentId }: PerformanceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string; register_no: string | null }>>([]);
   const router = useRouter();
 
   useEffect(() => {
     // Fetch students for the dropdown
     const fetchStudents = async () => {
-      const { data } = await supabase.from("students").select("id, first_name, last_name, register_no").order("first_name");
-      if (data) setStudents(data as Student[]);
+      const data = await getStudentsDropdown();
+      if (data) setStudents(data);
     };
     fetchStudents();
   }, []);
@@ -62,18 +63,11 @@ export default function PerformanceForm({ initialData, preselectedStudentId }: P
     setError(null);
     try {
       if (initialData) {
-        const { error: updateError } = await supabase
-          .from("exam_results")
-          .update(data)
-          .eq("id", initialData.id);
-        
-        if (updateError) throw updateError;
+        const res = await updateExamResult(initialData.id, data);
+        if (!res.success) throw new Error(res.error || "Failed to update exam result");
       } else {
-        const { error: insertError } = await supabase
-          .from("exam_results")
-          .insert([data]);
-        
-        if (insertError) throw insertError;
+        const res = await createExamResult(data);
+        if (!res.success) throw new Error(res.error || "Failed to create exam result");
       }
       
       // If we added from a student profile, go back there. Otherwise go to performance listing.

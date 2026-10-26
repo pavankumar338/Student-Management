@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import { supabase } from "@/lib/supabase";
+import { getStudents } from "@/app/actions/students";
+import { getAttendanceForDate } from "@/app/actions/attendance";
 import Link from "next/link";
 import { Users, UserPlus, GraduationCap, ChevronRight, Calendar } from "lucide-react";
 import { format } from "date-fns";
@@ -8,36 +9,22 @@ import AnalyticsCharts from "@/components/dashboard/AnalyticsCharts";
 import { Student } from "@/types/student";
 
 export default async function DashboardPage() {
-  // Fetch stats
-  const { count: totalStudents } = await supabase
-    .from("students")
-    .select("*", { count: "exact", head: true });
-
-  // Fetch all students for charts and recent list
-  const { data: allStudents } = await supabase
-    .from("students")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const recentStudents = allStudents ? allStudents.slice(0, 5) : [];
-  
-  // Fetch today's attendance for dynamic rate calculation
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const { data: todayAttendance } = await supabase
-    .from("attendance")
-    .select("*")
-    .eq("date", todayStr);
 
-  const totalStu = allStudents?.length || 0;
-  const presentToday = todayAttendance 
-    ? todayAttendance.filter((r: any) => r.status === "Present" || r.status === "Late").length
-    : 0;
+  const [allStudents, todayAttendance] = await Promise.all([
+    getStudents(),
+    getAttendanceForDate(todayStr),
+  ]);
+
+  const totalStudents = allStudents.length;
+  const recentStudents = allStudents.slice(0, 5);
+  
+  const totalStu = allStudents.length;
+  const presentToday = todayAttendance.filter((r) => r.status === "Present" || r.status === "Late").length;
   const attendanceRate = totalStu > 0 ? Math.round((presentToday / totalStu) * 100) : 0;
   
   // Compute active grades count
-  const activeGradesCount = allStudents 
-    ? Array.from(new Set(allStudents.map(s => s.grade).filter(Boolean))).length 
-    : 0;
+  const activeGradesCount = Array.from(new Set(allStudents.map(s => s.grade).filter(Boolean))).length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

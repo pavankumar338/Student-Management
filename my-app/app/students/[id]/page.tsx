@@ -1,21 +1,20 @@
-import { supabase } from "@/lib/supabase";
+import { getStudentById } from "@/app/actions/students";
+import { getExamResults } from "@/app/actions/performance";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Edit, Mail, Phone, Calendar, BookOpen, Clock, MapPin, Home, Hash, TrendingUp, Plus } from "lucide-react";
 import { format } from "date-fns";
 
-export default async function StudentDetailsPage({ params }: { params: { id: string } }) {
+export default async function StudentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // Fetch student and performance parallel
-  const [studentResponse, performanceResponse] = await Promise.all([
-    supabase.from("students").select("*").eq("id", id).single(),
-    supabase.from("exam_results").select("*").eq("student_id", id).order("exam_date", { ascending: false })
+  
+  // Fetch student and performance in parallel
+  const [student, examResults] = await Promise.all([
+    getStudentById(id),
+    getExamResults(id),
   ]);
 
-  const { data: student, error } = studentResponse;
-  const examResults = performanceResponse.data || [];
-
-  if (error || !student) {
+  if (!student) {
     notFound();
   }
 

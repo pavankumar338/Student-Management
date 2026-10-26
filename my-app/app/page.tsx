@@ -8,7 +8,7 @@ export default function Home() {
       <section className="text-center space-y-6 py-12 md:py-24">
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground">
-          Modern <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">School Management</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Student Management</span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Streamline your educational operations with our intuitive, fast, and secure student management system.

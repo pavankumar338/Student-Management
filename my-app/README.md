@@ -22,7 +22,7 @@ EduManage is a modern student administration and dynamic academic analytics plat
 - **Framework**: Next.js (App Router), TypeScript
 - **Styling**: Tailwind CSS v4, Glassmorphism design tokens
 - **Graphs**: Recharts
-- **Database**: Supabase (PostgreSQL with RLS policies enabled)
+- **Database**: MongoDB (via Mongoose with cached connection pooling)
 
 ---
 
@@ -35,17 +35,17 @@ EduManage is a modern student administration and dynamic academic analytics plat
    npm install
    ```
 
-2. **Configure Database**:
-   Run the SQL scripts in [database.sql](file:///c:/Users/pavan/OneDrive/Documents/Projects/Student-Mangament-System/WEB/my-app/database.sql) inside your Supabase SQL Editor.
-
-3. **Configure Environment Variables**:
-   Create a `.env.local` in the project root:
+2. **Configure Environment Variables**:
+   Create a `.env` in the project root:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-url.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anonymous-key
+   # Local MongoDB:
+   MONGODB_URI=mongodb://127.0.0.1:27017/edumanage
+
+   # Or MongoDB Atlas:
+   # MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/edumanage?retryWrites=true&w=majority
    ```
 
-4. **Run Application**:
+3. **Run Application**:
    ```bash
    npm run dev
    ```

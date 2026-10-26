@@ -1,14 +1,10 @@
-import { supabase } from "@/lib/supabase";
+import { getStudents } from "@/app/actions/students";
 import ClientStudentList from "./ClientStudentList";
-import { Student } from "@/types/student";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentsPage() {
-  const { data: students } = await supabase
-    .from("students")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const students = await getStudents();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -17,7 +13,7 @@ export default async function StudentsPage() {
         <p className="text-muted-foreground mt-1">Manage all students in the system.</p>
       </div>
       
-      <ClientStudentList initialStudents={(students as Student[]) || []} />
+      <ClientStudentList initialStudents={students} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Student } from "@/types/student";
 import { Search, Edit, Trash2, Eye, Plus, Download } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { deleteStudent } from "@/app/actions/students";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 
@@ -66,10 +66,10 @@ export default function ClientStudentList({ initialStudents }: ClientStudentList
     if (!confirm("Are you sure you want to delete this student?")) return;
     
     setIsDeleting(id);
-    const { error } = await supabase.from("students").delete().eq("id", id);
+    const result = await deleteStudent(id);
     
-    if (error) {
-      alert("Error deleting student: " + error.message);
+    if (!result.success) {
+      alert("Error deleting student: " + (result.error || "Failed to delete"));
     } else {
       setStudents(students.filter(s => s.id !== id));
       router.refresh();

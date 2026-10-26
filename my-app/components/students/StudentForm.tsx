@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CreateStudentInput, Student } from "@/types/student";
-import { supabase } from "@/lib/supabase";
+import { createStudent, updateStudent } from "@/app/actions/students";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -57,18 +57,11 @@ export default function StudentForm({ initialData }: StudentFormProps) {
       };
 
       if (initialData) {
-        const { error: updateError } = await supabase
-          .from("students")
-          .update(payload)
-          .eq("id", initialData.id);
-        
-        if (updateError) throw updateError;
+        const res = await updateStudent(initialData.id, payload);
+        if (!res.success) throw new Error(res.error || "Failed to update student");
       } else {
-        const { error: insertError } = await supabase
-          .from("students")
-          .insert([payload]);
-        
-        if (insertError) throw insertError;
+        const res = await createStudent(payload);
+        if (!res.success) throw new Error(res.error || "Failed to create student");
       }
       
       router.push("/students");

@@ -1,6 +1,5 @@
-import { supabase } from "@/lib/supabase";
-import { Student } from "@/types/student";
-import { AttendanceRecord } from "@/types/attendance";
+import { getStudents } from "@/app/actions/students";
+import { getAttendanceForDate } from "@/app/actions/attendance";
 import ClientAttendanceTracker from "./ClientAttendanceTracker";
 import { format } from "date-fns";
 import { ClipboardList } from "lucide-react";
@@ -10,20 +9,10 @@ export const dynamic = "force-dynamic";
 export default async function AttendancePage() {
   const today = format(new Date(), "yyyy-MM-dd");
 
-  // Fetch all students for registration
-  const { data: studentsData } = await supabase
-    .from("students")
-    .select("*")
-    .order("first_name");
-
-  // Fetch attendance records specifically for today
-  const { data: attendanceData } = await supabase
-    .from("attendance")
-    .select("*")
-    .eq("date", today);
-
-  const students = (studentsData as Student[]) || [];
-  const attendance = (attendanceData as AttendanceRecord[]) || [];
+  const [students, attendance] = await Promise.all([
+    getStudents(),
+    getAttendanceForDate(today),
+  ]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { supabase } from "@/lib/supabase";
+import { getAttendanceForDate, setAttendance as setAttendanceAction } from "@/app/actions/attendance";
 import { Student } from "@/types/student";
 import { AttendanceRecord } from "@/types/attendance";
 import { Check, X, Clock, Calendar as CalendarIcon, Loader2 } from "lucide-react";
@@ -32,17 +32,17 @@ export default function ClientAttendanceTracker({ initialStudents, initialAttend
 
   // Fetch attendance records specifically for the chosen date
   useEffect(() => {
-    const fetchAttendanceForDate = async () => {
-      const { data } = await supabase
-        .from("attendance")
-        .select("*")
-        .eq("date", selectedDate);
-      
-      if (data) {
-        setAttendance(data as AttendanceRecord[]);
+    let isMounted = true;
+    const fetchAttendance = async () => {
+      const data = await getAttendanceForDate(selectedDate);
+      if (isMounted && data) {
+        setAttendance(data);
       }
     };
-    fetchAttendanceForDate();
+    fetchAttendance();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedDate]);
 
   // Find attendance status for a student on current date
@@ -53,48 +53,21 @@ export default function ClientAttendanceTracker({ initialStudents, initialAttend
 
   // Triggered when a teacher clicks Present, Absent, or Late
   const markAttendance = async (studentId: string, status: "Present" | "Absent" | "Late") => {
-    const existingRecord = attendance.find(r => r.student_id === studentId);
-    
     // Set loading state for this specific student row
     setLoadingMap(prev => ({ ...prev, [studentId]: true }));
 
     try {
-      if (existingRecord) {
-        // Update existing record
-        if (existingRecord.status === status) {
-          // If clicked the already active state, delete it (reset)
-          const { error } = await supabase
-            .from("attendance")
-            .delete()
-            .eq("id", existingRecord.id);
-
-          if (!error) {
-            setAttendance(prev => prev.filter(r => r.id !== existingRecord.id));
-          }
-        } else {
-          // Change status
-          const { data, error } = await supabase
-            .from("attendance")
-            .update({ status })
-            .eq("id", existingRecord.id)
-            .select()
-            .single();
-
-          if (!error && data) {
-            setAttendance(prev => prev.map(r => r.id === existingRecord.id ? (data as AttendanceRecord) : r));
-          }
+      const res = await setAttendanceAction(studentId, selectedDate, status);
+      if (res.success) {
+        if (res.action === "deleted") {
+          setAttendance(prev => prev.filter(r => r.student_id !== studentId));
+        } else if (res.action === "updated" && res.data) {
+          setAttendance(prev => prev.map(r => r.student_id === studentId ? (res.data as AttendanceRecord) : r));
+        } else if (res.action === "created" && res.data) {
+          setAttendance(prev => [...prev.filter(r => r.student_id !== studentId), res.data as AttendanceRecord]);
         }
       } else {
-        // Insert new attendance record
-        const { data, error } = await supabase
-          .from("attendance")
-          .insert([{ student_id: studentId, status, date: selectedDate }])
-          .select()
-          .single();
-
-        if (!error && data) {
-          setAttendance(prev => [...prev, data as AttendanceRecord]);
-        }
+        alert("Failed to update attendance: " + (res.error || "Unknown error"));
       }
     } catch (err) {
       console.error(err);

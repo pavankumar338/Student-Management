@@ -1,19 +1,13 @@
-import { supabase } from "@/lib/supabase";
+import { getExamResults } from "@/app/actions/performance";
 import Link from "next/link";
 import { Plus, TrendingUp, Award, BookOpen } from "lucide-react";
-import { ExamResult } from "@/types/performance";
 import { format } from "date-fns";
 import ClientPerformanceList from "./ClientPerformanceList";
 
 export const dynamic = "force-dynamic";
 
 export default async function PerformancePage() {
-  const { data: performances } = await supabase
-    .from("exam_results")
-    .select("*, students(first_name, last_name, register_no, grade)")
-    .order("exam_date", { ascending: false });
-
-  const results = (performances as any[]) || [];
+  const results = await getExamResults();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

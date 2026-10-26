@@ -1,19 +1,15 @@
 import StudentForm from "@/components/students/StudentForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getStudentById } from "@/app/actions/students";
 import { notFound } from "next/navigation";
 import { Student } from "@/types/student";
 
-export default async function EditStudentPage({ params }: { params: { id: string } }) {
+export default async function EditStudentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { data: student, error } = await supabase
-    .from("students")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const student = await getStudentById(id);
 
-  if (error || !student) {
+  if (!student) {
     notFound();
   }
 
