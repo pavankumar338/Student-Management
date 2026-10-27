@@ -1,0 +1,64 @@
+services:
+  # 1. Next.js Web Application
+  app:
+    container_name: edumanage-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/edumanage
+      - PORT=3000
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - edumanage-net
+
+  # 2. Official MongoDB Database Engine
+  mongo:
+    container_name: edumanage-mongo
+    image: mongo:7.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - edumanage-net
+
+  # 3. Mongo Express Web Administration GUI
+  mongo-express:
+    container_name: edumanage-mongo-express
+    image: mongo-express:latest
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - edumanage-net
+
+volumes:
+  mongo_data:
+    name: edumanage_mongo_data
+
+networks:
+  edumanage-net:
+    name: edumanage_network
+    driver: bridge

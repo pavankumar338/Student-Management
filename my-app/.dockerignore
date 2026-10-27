@@ -1,0 +1,22 @@
+# Dependencies & build output
+node_modules
+.next
+out
+build
+
+# Version control & IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Environment files
+.env*.local
+
+# Logs & temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+*.pem

@@ -50,3 +50,25 @@ EduManage is a modern student administration and dynamic academic analytics plat
    npm run dev
    ```
    Open **http://localhost:3000** in your browser.
+
+---
+
+## 🐳 Run with Docker Compose
+
+Run all three services (Next.js Application, MongoDB, and Mongo Express UI) with a single command:
+
+```bash
+docker compose up --build
+```
+
+### Services Included:
+| Service | Image / Source | Port | Description |
+|---|---|---|---|
+| **Next.js App** | `./Dockerfile` (standalone) | `http://localhost:3000` | Full-stack EduManage web app |
+| **MongoDB** | `mongo:7.0` | `localhost:27017` | Persistent student database engine |
+| **Mongo Express** | `mongo-express:latest` | `http://localhost:8081` | Web administration UI for MongoDB |
+
+To stop the services:
+```bash
+docker compose down
+```
